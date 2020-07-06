@@ -4,31 +4,64 @@ const db = require("../models");
 const User = db.users;
 const Op = db.Sequelize.Op;
 
-var jwt=require('jsonwebtoken');
-var bcrypt = require('bcryptjs');
-var config = require('../config/auth.config');
+var jwt=require("jsonwebtoken");
+var bcrypt = require("bcryptjs");
+var config = require("../config/auth.config");
+
+exports.logout = (req, res) => {
+  res.status(200).send({auth: false, token:null });
+};
+
+exports.login = (req, res) => {
+  User.findOne(
+    { where: 
+      {
+        email : req.body.email
+      }
+  }).then(user => {
+    if(!user)
+      return res.status(401).send({auth: false, token: null});
+
+    var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+
+    if(!passwordIsValid)
+      return res.status(401).send({auth: false, token: null});
+
+    var token = jwt.sign(
+      {id: user.id},
+      config.secret,
+      {expiresIn: 86400});
+
+    return res.status(200).send({auth:true, token:token});
+  }).catch(err => {
+    console.log(err);
+    return res.status(500).send({
+      "success": 0,
+      "messeage": "error!!! - /api/auth/login"
+    });
+  });
+
+};
 
 exports.register = (req, res) => {
 
   if(!req.body.email) {
-    res.status(400).send({
+    return res.status(400).send({
       message: "email can not be empty!"
     });
-    return;
+    
   }
 
   if(!req.body.password){
-    res.status(400).send({
+    return res.status(400).send({
       message: "password can not be empty!"
     });
-    return;
   }
 
   if(!req.body.name){
-    res.status(400).send({
+    return res.status(400).send({
       message: "name can not be empty!"
     });
-    return;
   }
 
   var hashedPassword = bcrypt.hashSync(req.body.password, 8);
@@ -41,7 +74,6 @@ exports.register = (req, res) => {
 
   User.create(user)
   .then(data=>{
-    console.log(data.id);
     var token = jwt.sign(
       { id:data.id},
       config.secret, 
@@ -58,7 +90,6 @@ exports.register = (req, res) => {
 }
 
 exports.authToken = (req, res) => {
-  const id = req.params.id;
   var token = req.headers['x-access-token'];
 
   if(!token) 
@@ -78,16 +109,28 @@ exports.authToken = (req, res) => {
       }
 
       User.findByPk(decoded.id)
-      .then(data=> {
-        if(!data){
-          res.status(404).send({"success":"0", "message" :"해당사용자를 찾지 못하였습니다."});
-        } else {
-          res.status(200).send(data); 
-        }
-      })
-      .catch(err=> {
-        res.status(500).send({"success":"0", "message" :"해당사용자를 찾는데 문제가 발생하였습니다."});
-      });
+          .then(data=> {
+            if(!data){
+              return res.status(404).send({"success":"0", "message" :"해당사용자를 찾지 못하였습니다."});
+            } else {
+              return res.status(200).send(data);
+            }
+          })
+          .catch(err=> {
+            console.log(err);
+            return res.status(500).send({"success":"0", "message" :"해당사용자를 찾는데 문제가 발생하였습니다."});
+          });
+
     }
   );
+};
+
+exports.findById = (req, res, next) => {
+  User.findByPk(req.userId)
+      .then(data=>{
+        res.status(200).send(data);
+      })
+      .catch(err=>{
+        res.status(500).send({success:"0", message :"해당사용자를 찾는데 문제가 발생하였습니다."});
+      })
 };
