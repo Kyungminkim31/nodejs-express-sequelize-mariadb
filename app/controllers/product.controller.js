@@ -5,7 +5,7 @@ const Product = db.products;
 const Op = db.Sequelize.Op;
 
 exports.create = (req, res) => {
-  console.log(req.body.name);
+  
   if(!req.body.name) {
     res.status(400).send({
       message: "Content can not be empty!"
