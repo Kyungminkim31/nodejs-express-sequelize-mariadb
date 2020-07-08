@@ -32,7 +32,13 @@ exports.login = (req, res) => {
       config.secret,
       {expiresIn: 86400});
 
-    return res.status(200).send({auth:true, token:token});
+    return res.status(200).send({
+      id: user.id,
+      username: user.name,
+      email: user.email,
+      password:req.body.password,
+      token:token
+    });
   }).catch(err => {
     console.log(err);
     return res.status(500).send({
