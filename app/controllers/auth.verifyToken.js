@@ -3,7 +3,7 @@ var config = require("../config/auth.config");
 
 function verifyToken(req, res, next){
   var token = req.headers["x-access-token"];
-
+  console.log("verifyToken");
   if(!token){
     return res.status(403).send({auth: false, message:"No token provided."});
   }

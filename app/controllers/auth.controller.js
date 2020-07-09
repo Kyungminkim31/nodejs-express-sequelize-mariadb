@@ -33,10 +33,16 @@ exports.login = (req, res) => {
       {expiresIn: 86400});
 
     return res.status(200).send({
+<<<<<<< HEAD
       id: user.id,
       username: user.name,
       email: user.email,
       password:req.body.password,
+=======
+      username: user.name,
+      email: user.email,
+      password: user.password,
+>>>>>>> product
       token:token
     });
   }).catch(err => {
