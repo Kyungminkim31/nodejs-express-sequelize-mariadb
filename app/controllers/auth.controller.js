@@ -33,9 +33,10 @@ exports.login = (req, res) => {
       {expiresIn: 86400});
 
     return res.status(200).send({
-      username: user.name,
+      name: user.name,
       email: user.email,
       password: user.password,
+      role: user.role,
       token:token
     });
   }).catch(err => {
@@ -69,12 +70,19 @@ exports.register = (req, res) => {
     });
   }
 
+  if(!req.body.role){
+    return res.status(400).send({
+      message: "role can not be empty!"
+    });
+  }
+
   var hashedPassword = bcrypt.hashSync(req.body.password, 8);
 
   const user = {
     name: req.body.name,
     password: hashedPassword,
-    email: req.body.email
+    email: req.body.email,
+    role: req.body.role
   };
 
   User.create(user)
@@ -84,7 +92,13 @@ exports.register = (req, res) => {
       config.secret, 
       {expiresIn:86400}
     );
-    res.status(200).send({auth:true, token: token});
+    res.status(200).send({
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+      token:token
+    });
   })
   .catch(err=>{
     res.status(500).send({
